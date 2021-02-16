@@ -1,0 +1,11 @@
+.quote {
+  padding:20px;
+}
+.quote table {
+  margin-top: 35px;
+}
+
+td, th {
+  padding: 15px;
+  font-size: 20px;
+}
