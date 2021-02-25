@@ -10,11 +10,10 @@ import TickSchema from '../models/tick.js'
 // mongoose.connect("mongodb://54.147.196.139:27017",{useNewUrlParser: true, useUnifiedTopology: true },async (e)=>{
 //     console.log("Mongo says ", e)
 // })
+console.log(process.env.DATABASE_URL)
+mongoose.set('useCreateIndex', true);
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
     console.log("Mongo says ", e)
-    console.log(await EODs.find({}))
-    // console.log(await Ticker.deleteMany({}))
-    // console.log(await Ticker.find({}))
 })
 
 // interface StockData {
@@ -41,6 +40,29 @@ export async function storeAllDailies(start, end) {
         await storeDailies(ticker.ticker, start, end)
     }
 }
+export async function storeEODs(eods){
+    return await EODs.insertMany(eods)
+    // return await EODs.insertMany(eods,(e, d) => e ? console.log("EODError", e) : null)
+}
+//Returns the distinct values for each provided column in a specific Collection
+export async function getDistinct(Collection,filters, optionsToGet){
+	// console.log(filters,optionsToGet)
+	const $group = {_id:null}
+	const $project = {}
+	for (const option of optionsToGet) {
+		const optionTag = `$${option}`
+		$group[option] ={$addToSet:optionTag}
+		$project [option]=optionTag
+	}
+	const pipeline = [{$match:filters},{$group}]
+	if(optionsToGet.length){
+		pipeline.push({$project})
+	}
+	const options= await Collection.aggregate(pipeline)
+    // console.log(options,Collection)
+    return options[0]||[]
+}
+
 export function isInRange(doc, start, end) {
     const minTimestamp = doc.get("minTimestamp")
     const maxTimestamp = doc.get("maxTimestamp")
@@ -96,8 +118,8 @@ export function between(data, start, end, key) {
 export async function getTicks(symbol, start, end) {
     return between((await EODs.findOne({ symbol }))?.get("tick"),start,end,"t")
 }
-export async function getDailies(symbol, start, end) {
-    return between((await EODs.findOne({ symbol }))?.get("daily"),start,end,"t")
+export async function getDailies(T, start, end) {
+    return await EODs.find({ T ,t:{$gte:start,$lte:end}},null,{sort: {t: -1}})
 }
 // export async function getDaily(symbol: string, start: number, end: number):Promise<AggregateData[]>  {
 //     const doc = await Ticker.findOne({symbol},{},{upsert:true,new:true,useFindAndModify:false})

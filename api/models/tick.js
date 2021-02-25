@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 let Tick = new Schema({
+		T:{
+			type:String
+		},
+
 		I: {
 			type: String
 		},
@@ -42,4 +46,5 @@ let Tick = new Schema({
 			type: Number
 		}
 	})
+	Tick.index({T:1, i: 1,x: 1, r: 1}, { unique: true });
 	module.exports = mongoose.model('Tick',Tick);

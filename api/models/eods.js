@@ -36,10 +36,13 @@ const eod = new Schema({
 	n:{
 		type:Number
 	},
-	d:{
-		type:String,
-		required:true
-	}	
+	// d:{
+	// 	type:String,
+	// 	required:true
+	// },
+
+	filtersPassed:[String]
 })
+eod.index({ T: 1, t: 1}, { unique: true });
 
 module.exports = mongoose.model('eod',eod)

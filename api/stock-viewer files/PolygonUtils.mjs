@@ -1,5 +1,4 @@
 // import StockData from "../src/StockViewer";
-import { restClient } from 'polygon.io'
 import { config } from 'dotenv'
 import fetch from 'node-fetch'
 import { millisInADay, millisIn90Days, millisIn90MarketDays} from './Common.mjs'
@@ -43,6 +42,8 @@ export const getDailies = apiRequest("v2/aggs/ticker/{ticker}/range/{multiplier}
 export const getTicksPage = apiRequest("v2/ticks/stocks/trades/{ticker}/{date}",{results:[]})
 //<{ticker:string},{},TickerInfo>
 export const getInfo = apiRequest("v1/meta/symbols/{ticker}/company")
+//<{date:string},{},{results:{T,v,o,c,h,l,t}[]}>
+export const getGroupedDaily = apiRequest("v2/aggs/grouped/locale/us/market/stocks/{date}",{results:[]})
 // export const client = restClient(process.env.API_KEY)
 
 
@@ -166,9 +167,9 @@ export async function* iterateDailiesPages(symbol, start, end, step) {
     // Or the pointer is still within range, there is more data so keep looping
     let data
     do {
-        console.log("HI!",symbol, pageStart, pageEnd, step)
+        // console.log("HI!",symbol, pageStart, pageEnd, step)
         data = await getDailies({ticker:symbol, from:pageStart, to:pageEnd, multiplier:1,timespan:"day"})
-        console.log("HI2")
+        // console.log("HI2")
         bufferSize = data.resultsCount
         pageStart = pageEnd
         pageEnd = pageStart + pageSize * millisInADay
