@@ -7,6 +7,16 @@ import * as Databasing from '../stock-viewer files/Databasing.mjs'
 import * as PolygonUtils from '../stock-viewer files/PolygonUtils.mjs'
 import dotenv from 'dotenv'
 
+import * as util from 'util'
+
+var log_file = fs.createWriteStream('.' + '/debug.log', {flags : 'w'});
+var log_stdout = process.stdout;
+
+console.log = function(...args) { //
+  log_file.write(util.format(...args) + '\n');
+  log_stdout.write(util.format(...args) + '\n');
+};
+
 const config = dotenv.config().parsed
 const ESTOffset = -5
 // polygon key
@@ -14,15 +24,25 @@ let key = config.API_KEY
 // console.log(config)
 // Filter function should take in an index into the list and return true or false
 // Also days is the number of days considered in the calculation
+// const Filters = [
+// 	{ name: "ALL PASS", days: 1, filter: ()=>true },
+// 	{ name: "ALL PASS2", days: 1, filter: ()=>true },
+// 	nDaysUp(3),
+// 	nDaysDown(3),
+// 	{ name: "Gap Up", days: 2, filter: gapUp },
+// 	{ name: "Gap Down", days: 2, filter: gapDown },
+// ]
 const Filters = [
+	{ name: "ALL PASS", days: 1, filter: ()=>true },
+	{ name: "ALL PASS2", days: 1, filter: ()=>true },
 	nDaysUp(3),
 	nDaysDown(3),
 	{ name: "Gap Up", days: 2, filter: gapUp },
 	{ name: "Gap Down", days: 2, filter: gapDown },
 ]
-function setFilter(doc, filter) {
-	doc.update({ $addToSet: filter.name })
-	console.log("Woohooooooo",filter,doc)
+async function setFilter(doc, filter) {
+	await doc.update({ $addToSet: {filtersPassed:filter.name}})
+	console.log("Woohooooooo", doc.filtersPassed)
 }
 function nDaysUp(n) {
 	return {
@@ -59,12 +79,12 @@ function gapDown(series, i) {
 	return series[i].h < (series[i - 1].l)
 }
 
-function toDateString(millis){
-	return new Date(millis).getTimezoneOffset() ("EST")
+function toDateString(millis) {
+	return new Date(millis).getTimezoneOffset()("EST")
 }
 
 
-async function process(date) {
+async function storeDataFor(date) {
 	let result;
 	// get the eod from polygon
 	let Eod = await PolygonUtils.getGroupedDaily({ date })
@@ -78,8 +98,8 @@ async function process(date) {
 	// write the data to mongo
 	// Old code:
 	// processEodData(Eod, date)
-	
-	Databasing.storeEODs(Eod.results)
+
+	await Databasing.storeEODs(Eod.results)
 		.then((resp) => {
 			if (resp !== null) {
 				console.log("wrote data")
@@ -88,7 +108,7 @@ async function process(date) {
 			}
 		})
 		.catch((err) => {
-			console.log("DB err: ",err)
+			console.log("DB err: ")
 		})
 
 	// get tickers to loop through
@@ -96,24 +116,25 @@ async function process(date) {
 	const [y, m, d] = date.split('-').map(Number)
 	const startOfDay = Date.UTC(y, m - 1, d);
 	const endOfDay = Date.UTC(y, m - 1, d, 23, 59, 59, 999);
-	let universe = await Databasing.getDistinct(eods, { t: { $gte: startOfDay, $lte: endOfDay } }, ['T'])
+	// let universe = await Databasing.getDistinct(eods, { t: { $gte: startOfDay, $lte: endOfDay } }, ['T'])
+	let universe = await Databasing.getDistinct(eods, { }, ['T'])
 	// loop through active symbols pass to child process for processing
 	let dailiesForTicker
-	for (let ticker of universe.T) {
-		dailiesForTicker = await Databasing.getDailies(ticker,startOfDay,endOfDay) // get past data data points, should already be sorted
+	for (let ticker of (universe.T||[])) {
+		dailiesForTicker = await Databasing.getDailies(ticker, startOfDay, endOfDay) // get past data data points, should already be sorted
 		if (dailiesForTicker !== null) {
 			// console.log(`got data for ${ticker}`)
 			// dailiesForTicker.data.sort((a, b) => { return (a.t - b.t) }) // sort by milliseconds
 			// run filters
-
+			// console.log(`T: ${ticker}`, dailiesForTicker)
 			for (const filter of Filters) {
-				if(dailiesForTicker.length<filter.days)continue
-				for (let i = filter.days; i < dailiesForTicker.length; i++) {
+				if (dailiesForTicker.length < filter.days) continue
+				for (let i = filter.days-1; i < dailiesForTicker.length; i++) {
 					const dailyDoc = dailiesForTicker[i]
 					if (filter.filter(dailiesForTicker, i)) {
-						setFilter(dailyDoc, filter)
+						await setFilter(dailyDoc, filter)
 					}
-					dailyDoc.save()
+					await dailyDoc.save()
 				}
 				// console.log(dailyDoc.filtersPassed)
 			}
@@ -140,12 +161,17 @@ async function process(date) {
 	}
 	return true
 }
-let date = "2021-01-29" //convertMillisecondsToDate(Date.now()-86400000)
-process(date).then(async res => {
-	console.log("Done")
 
-}).catch((err) => console.log("err",err))
+let dateObject = new Date()
+for (let i = 0; i < 10; i++) {
+	let date = `${dateObject.getFullYear()}-${(dateObject.getMonth()+1).toString().padStart(2,"0")}-${dateObject.getDate().toString().padStart(2,"0")}` //convertMillisecondsToDate(Date.now()-86400000)
+	console.log(date)
+	storeDataFor(date).then(async res => {
+		console.log("Done")
 
+	}).catch((err) => console.log("err"))
+	dateObject.setDate(dateObject.getDate()-1)
+}
 
 
 

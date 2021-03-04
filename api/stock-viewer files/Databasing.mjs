@@ -40,53 +40,58 @@ export async function storeAllDailies(start, end) {
         await storeDailies(ticker.ticker, start, end)
     }
 }
-export async function storeEODs(eods){
-    return await EODs.insertMany(eods)
-    // return await EODs.insertMany(eods,(e, d) => e ? console.log("EODError", e) : null)
+export async function storeEODs(eods) {
+    // return await EODs.insertMany(eods)
+    return await EODs.insertMany(eods, (e, d) => {
+        if (e) {
+            if(e.code!=11000)
+                console.log("EODError", e)
+        }
+    })
 }
 //Returns the distinct values for each provided column in a specific Collection
-export async function getDistinct(Collection,filters, optionsToGet){
-	// console.log(filters,optionsToGet)
-	const $group = {_id:null}
-	const $project = {}
-	for (const option of optionsToGet) {
-		const optionTag = `$${option}`
-		$group[option] ={$addToSet:optionTag}
-		$project [option]=optionTag
-	}
-	const pipeline = [{$match:filters},{$group}]
-	if(optionsToGet.length){
-		pipeline.push({$project})
-	}
-	const options= await Collection.aggregate(pipeline)
+export async function getDistinct(Collection, filters, optionsToGet) {
+    // console.log(filters,optionsToGet)
+    const $group = { _id: null }
+    const $project = {}
+    for (const option of optionsToGet) {
+        const optionTag = `$${option}`
+        $group[option] = { $addToSet: optionTag }
+        $project[option] = optionTag
+    }
+    const pipeline = [{ $match: filters }, { $group }]
+    if (optionsToGet.length) {
+        pipeline.push({ $project })
+    }
+    const options = await Collection.aggregate(pipeline)
     // console.log(options,Collection)
-    return options[0]||[]
+    return options[0] || []
 }
 
 export function isInRange(doc, start, end) {
     const minTimestamp = doc.get("minTimestamp")
     const maxTimestamp = doc.get("maxTimestamp")
-    console.log(minTimestamp, maxTimestamp,start,end,minTimestamp <= start && start <= maxTimestamp , minTimestamp <= end && end <= maxTimestamp,minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp)
-    return {newMin:Math.min(minTimestamp,start),newMax:Math.max(maxTimestamp,end),inRange:(minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp)}
+    console.log(minTimestamp, maxTimestamp, start, end, minTimestamp <= start && start <= maxTimestamp, minTimestamp <= end && end <= maxTimestamp, minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp)
+    return { newMin: Math.min(minTimestamp, start), newMax: Math.max(maxTimestamp, end), inRange: (minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp) }
 }
 export async function storeDailies(symbol, start, end) {
-    const tickerInfo = await PolygonUtils.getInfo({ticker:symbol});
-    if(tickerInfo.error!=undefined){
+    const tickerInfo = await PolygonUtils.getInfo({ ticker: symbol });
+    if (tickerInfo.error != undefined) {
         // console.log(tickerInfo)
         // return
     }
     const doc = await Tickers.findOneAndUpdate({ symbol: tickerInfo.symbol }, tickerInfo, { upsert: true, new: true, useFindAndModify: false })
-    console.log(tickerInfo,doc)
+    console.log(tickerInfo, doc)
     //If the entire queried range is in range, return
     const rangeInfo = isInRange(doc, start, end)
     if (rangeInfo.inRange) {
         console.log(`We already have the data for ${symbol} from ${start} to ${end}`)
         return doc
     }
-    doc.updateOne({ $min: { minTimestamp: start }, $max: { maxTimestamp: end } },{}, (e, d) => e ? console.log("timestampingError", e) : null)
+    doc.updateOne({ $min: { minTimestamp: start }, $max: { maxTimestamp: end } }, {}, (e, d) => e ? console.log("timestampingError", e) : null)
     // doc=undefined
-    start=rangeInfo.newMin
-    end=rangeInfo.newMax
+    start = rangeInfo.newMin
+    end = rangeInfo.newMax
     const dailiesPages = await PolygonUtils.iterateDailiesPages(symbol, start, end, millisInADay);
     const tickPages = await PolygonUtils.iterateTickPages(symbol, start);
     for await (let page of dailiesPages) {
@@ -102,11 +107,11 @@ export async function storeDailies(symbol, start, end) {
 }
 export function between(data, start, end, key) {
     const values = []
-    data=data||[]
+    data = data || []
     let i = data[Symbol.iterator]()
     let lastIterator
     let count
-    do { 
+    do {
         lastIterator = i.next()
     } while (!lastIterator.done && +lastIterator.value[key] < start)
     while (!lastIterator.done && +lastIterator.value[key] < end) {
@@ -116,10 +121,10 @@ export function between(data, start, end, key) {
     return values
 }
 export async function getTicks(symbol, start, end) {
-    return between((await EODs.findOne({ symbol }))?.get("tick"),start,end,"t")
+    return between((await EODs.findOne({ symbol }))?.get("tick"), start, end, "t")
 }
 export async function getDailies(T, start, end) {
-    return await EODs.find({ T ,t:{$gte:start,$lte:end}},null,{sort: {t: -1}})
+    return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: -1 } })
 }
 // export async function getDaily(symbol: string, start: number, end: number):Promise<AggregateData[]>  {
 //     const doc = await Ticker.findOne({symbol},{},{upsert:true,new:true,useFindAndModify:false})
@@ -129,7 +134,7 @@ export async function getDailies(T, start, end) {
 // }
 
 
-export function runAggregateCalulations(dailies){
+export function runAggregateCalulations(dailies) {
     let count = 0
     let totalRange = 0
     let totalTPV = 0
