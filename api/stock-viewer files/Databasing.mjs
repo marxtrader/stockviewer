@@ -7,13 +7,13 @@ import Tickers from '../models/tickers.js'
 import * as PolygonUtils from './PolygonUtils.mjs';
 import TickSchema from '../models/tick.js'
 
+const ShouldLog = false
 // mongoose.connect("mongodb://54.147.196.139:27017",{useNewUrlParser: true, useUnifiedTopology: true },async (e)=>{
 //     console.log("Mongo says ", e)
 // })
-console.log(process.env.DATABASE_URL)
 mongoose.set('useCreateIndex', true);
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
-    console.log("Mongo says ", e)
+    ShouldLog?console.log("Mongo says ", e):null
 })
 
 // interface StockData {
@@ -42,11 +42,22 @@ export async function storeAllDailies(start, end) {
 }
 export async function storeEODs(eods) {
     // return await EODs.insertMany(eods)
-    return await EODs.insertMany(eods, (e, d) => {
-        if (e) {
-            if(e.code!=11000)
-                console.log("EODError", e)
-        }
+    return new Promise((resolve, reject) => {
+        EODs.insertMany(eods, { ordered: false }, (e, d) => {
+            if (e) {
+                if (e.code != 11000){
+                    if(ShouldLog)
+                    console.log("EODError", e)
+                    reject(e)
+                    return e
+                }
+                else{
+                    if(ShouldLog)
+                    console.log("DUPE CAUGHT", e.message)
+                }
+            }
+            resolve()
+        })
     })
 }
 //Returns the distinct values for each provided column in a specific Collection
@@ -71,7 +82,7 @@ export async function getDistinct(Collection, filters, optionsToGet) {
 export function isInRange(doc, start, end) {
     const minTimestamp = doc.get("minTimestamp")
     const maxTimestamp = doc.get("maxTimestamp")
-    console.log(minTimestamp, maxTimestamp, start, end, minTimestamp <= start && start <= maxTimestamp, minTimestamp <= end && end <= maxTimestamp, minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp)
+    // console.log(minTimestamp, maxTimestamp, start, end, minTimestamp <= start && start <= maxTimestamp, minTimestamp <= end && end <= maxTimestamp, minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp)
     return { newMin: Math.min(minTimestamp, start), newMax: Math.max(maxTimestamp, end), inRange: (minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp) }
 }
 export async function storeDailies(symbol, start, end) {
@@ -81,7 +92,7 @@ export async function storeDailies(symbol, start, end) {
         // return
     }
     const doc = await Tickers.findOneAndUpdate({ symbol: tickerInfo.symbol }, tickerInfo, { upsert: true, new: true, useFindAndModify: false })
-    console.log(tickerInfo, doc)
+    // console.log(tickerInfo, doc)
     //If the entire queried range is in range, return
     const rangeInfo = isInRange(doc, start, end)
     if (rangeInfo.inRange) {
@@ -124,7 +135,7 @@ export async function getTicks(symbol, start, end) {
     return between((await EODs.findOne({ symbol }))?.get("tick"), start, end, "t")
 }
 export async function getDailies(T, start, end) {
-    return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: -1 } })
+    return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: 1 } })
 }
 // export async function getDaily(symbol: string, start: number, end: number):Promise<AggregateData[]>  {
 //     const doc = await Ticker.findOne({symbol},{},{upsert:true,new:true,useFindAndModify:false})
