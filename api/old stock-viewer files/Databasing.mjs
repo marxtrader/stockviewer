@@ -134,16 +134,11 @@ export function between(data, start, end, key) {
 export async function getTicks(symbol, start, end) {
     return between((await EODs.findOne({ symbol }))?.get("tick"), start, end, "t")
 }
+
+// Retrieves the EODs for a specified ticker in a given range
 export async function getDailies(T, start, end) {
     return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: 1 } })
 }
-// export async function getDaily(symbol: string, start: number, end: number):Promise<AggregateData[]>  {
-//     const doc = await Ticker.findOne({symbol},{},{upsert:true,new:true,useFindAndModify:false})
-//     // return doc.get("tick")
-//     return doc.get("daily")
-//     // return doc
-// }
-
 
 export function runAggregateCalulations(dailies) {
     let count = 0
