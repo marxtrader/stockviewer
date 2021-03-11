@@ -14,7 +14,7 @@
         "nightlyDev": "cd api && npm run nightlyDev",
         "background": "cd api && npm run background"
     },
-    "author": "",
+    "author": "", 
     "license": "ISC",
     "dependencies": {
         "@amcharts/amcharts4": "^4.10.13",
