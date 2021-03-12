@@ -2,6 +2,8 @@
 // import Tick from './Tick'
 // import Averages from './Averages'
 const mongoose = require('mongoose');
+const EOD = require('./eods');
+const Tick= require("./tick")
 const Schema = mongoose.Schema;
 
 let Tickers = new Schema({
@@ -79,9 +81,6 @@ let Tickers = new Schema({
 		range : Number,
 		weighted: Number,
 		count : Number
-	},
-	eod: {
-		type:Array
-	}	
+	}
 });
 module.exports = mongoose.model('Tickers', Tickers);

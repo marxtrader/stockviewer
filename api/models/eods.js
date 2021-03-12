@@ -36,10 +36,32 @@ const eod = new Schema({
 	n:{
 		type:Number
 	},
-	d:{
-		type:String,
-		required:true
-	}	
+	// d:{
+	// 	type:String,
+	// 	required:true
+	// },
+
+	filtersPassed:[String],
+
+	oddlotVolume: {
+		type:Number
+	},
+    oddlotCount: {
+		type:Number
+	},
+    volume: {
+		type:Number
+	},
+    count:{
+		type:Number
+	},
+    blockCount:{
+		type:Number
+	},
+    blockVolume: {
+		type:Number
+	}
 })
+eod.index({ T: 1, t: 1}, { unique: true });
 
 module.exports = mongoose.model('eod',eod)

@@ -2,6 +2,8 @@
 const express = require('express')
 const router = express.Router()
 const Results = require('../models/results')
+const Databasing = import('../stock-viewer files/Databasing.mjs')
+// import * as Databasing from '../stock-viewer files/Databasing'
 
 // router.get('/price', async (req, res) =>{
 // 	let options=[]
@@ -81,22 +83,13 @@ router.get('/price', async (req, res) => {
 })
 
 router.get('/filter', async (req, res) => {
-	const filters = req.query.filters?JSON.parse(req.query.filters):{}
-	const optionsToGet =req.query.options? JSON.parse(req.query.options):[]
-	console.log(filters,optionsToGet)
-	const $group = {_id:null}
-	const $project = {}
-	for (const option of optionsToGet) {
-		const optionTag = `$${option}`
-		$group[option] ={$addToSet:optionTag}
-		$project [option]=optionTag
-	}
-	const pipeline = [{$match:filters},{$group}]
-	if(optionsToGet.length){
-		pipeline.push({$project})
-	}
-	const options= await Results.aggregate(pipeline)
-	res.json(options[0])
+	res.json(
+		await Databasing.getDistinct(
+			Results,
+			req.query.filters?JSON.parse(req.query.filters):{},
+			req.query.options? JSON.parse(req.query.options):[]
+		)
+	)
 })
 
 module.exports = router
