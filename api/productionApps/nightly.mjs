@@ -112,7 +112,10 @@ async function storeDataFor(date) {
 	// Old code:
 	// processEodData(Eod, date)
 
-	await Databasing.storeEODs(Eod.results)
+	await Databasing.storeEODs(Eod.results.map(eod=>{
+		const tickInfo = getTicks(eod.T,dateString(eod.t))
+		return ({...eod,...tickInfo})
+	}))
 		// .then((resp) => {
 		// 	if (resp !== null) {
 		// 		console.log("wrote data")
