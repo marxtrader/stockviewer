@@ -4,8 +4,9 @@ import mongoose from 'mongoose'
 import * as ss from 'simple-statistics'
 // let getDates = require('../functions/getDates')
 import eods from '../models/eods.js'
-import * as Databasing from '../stock-viewer files/Databasing.mjs'
-import * as PolygonUtils from '../stock-viewer files/PolygonUtils.mjs'
+import {getTicks} from '../functions/getTicks.mjs'
+import * as Databasing from '../old stock-viewer files/Databasing.mjs'
+import * as PolygonUtils from '../old stock-viewer files/PolygonUtils.mjs'
 import dotenv from 'dotenv'
 
 import * as util from 'util'
@@ -98,7 +99,6 @@ function gapDown(series, i) {
 // 	return new Date(millis).getTimezoneOffset()("EST")
 // }
 
-
 async function storeDataFor(date) {
 	let result;
 	// get the eod from polygon
@@ -111,11 +111,16 @@ async function storeDataFor(date) {
 	// write the data to mongo
 	// Old code:
 	// processEodData(Eod, date)
-
-	await Databasing.storeEODs(Eod.results.map(eod=>{
-		const tickInfo = getTicks(eod.T,dateString(eod.t))
-		return ({...eod,...tickInfo})
-	}))
+	const EODdata = []
+	for(const eod of Eod.results){
+		if(EODdata.length==3)break;
+		const tickInfo = await getTicks(eod.T, dateString(new Date(eod.t)))
+		console.log(EODdata)
+		EODdata.push({...eod,...tickInfo})
+	}
+	console.log(EODdata)
+	// const EODdata = Eod.results
+	await Databasing.storeEODs(EODdata)
 		// .then((resp) => {
 		// 	if (resp !== null) {
 		// 		console.log("wrote data")
