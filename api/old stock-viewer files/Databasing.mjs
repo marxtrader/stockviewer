@@ -131,9 +131,9 @@ export function between(data, start, end, key) {
     }
     return values
 }
-export async function getTicks(symbol, start, end) {
-    return between((await EODs.findOne({ symbol }))?.get("tick"), start, end, "t")
-}
+// export async function getTicks(symbol, start, end) {
+//     return between((await EODs.findOne({ symbol }))?.get("tick"), start, end, "t")
+// }
 
 // Retrieves the EODs for a specified ticker in a given range
 export async function getDailies(T, start, end) {

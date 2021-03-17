@@ -1,72 +1,63 @@
 
 const key = "TGH02yWO2sxsCHI_nwzD4Y7hlCJ0gXz02u6GWy"
 import * as PolygonUtils from '../old stock-viewer files/PolygonUtils.mjs'
-import axios from 'axios'
 
-export async function getTicks(ticker, date, limit = 1000, ticks = [],t = 0) {
+export async function getTicks(ticker, date, invalidConditions = [15, 16, 38, 17], limit = 1000) {
+    // Initialization of all the values we want to store
     let oddlotVolume = 0; let oddlotCount = 0; let volume = 0; let count = 0; let blockCount = 0; let blockVolume = 0;
-    const resp = PolygonUtils.getTicksPage({timestamp:t,limit,date,ticker})
 
-    // just so we can copy and paste the url in a browser to check results
-    // let url = `https://api.polygon.io/v2/ticks/stocks/trades/${ticker}/${date}?timestamp=${t}&limit=${limit}&apiKey=${key}`
-    // // console.log("url : ", url)
-    // let resp = await axios({
-    //     method: "get",
-    //     url: url,
-    //     config: { headers: { 'Content-Type': 'application/json' } }
-    // })
+    // The set of invalid trade condition
+    const conditionsToIgnore = new Set(invalidConditions)
 
-        // if the result set is equal to the limit , check for more records.
-        .then((resp) => {
-            const data = resp
-            ticks = ticks.concat(data.results);
-            if (data.results_count == limit) {
+    // The data as returned from polygon
+    let data;
 
-                // get the timestamp for the last record.
-                t = data.results[data.results.length - 1].t
-                return getTicks(ticker, date, limit, ticks,t)
+    // The timestamp offset of the current page of tick data
+    let t = 0;
 
-                // result count is less than limit so we must have gotten them all
-            } else {
-                // loop through and crunch the data points
-                // console.log(ticks)
-                let ignore = new Set([15, 16, 38, 17]);	// ignore certain trade conditions
-                for (let trade of ticks) {
+    do {
+        data = await PolygonUtils.getTicksPage({ timestamp: t, limit, date, ticker })
+        if (data.results.length == 0) break;
 
-                    // not all trades have a trade condition, if omitted it is considered a valid trade
-                    if (trade.c == undefined) { trade.c = [0] }
-                    if (trade.s !== 0) {
-                        const found = trade.c.some(r => ignore.has(r)) // check for valid trade conditions
-                        if (!found) {  // considered a valid trade 
-                            volume += trade.s
-                            count += 1
-                            if (trade.s < 100) {
-                                oddlotVolume += trade.s
-                                oddlotCount += 1
-                            }
-                            if (trade.s >= 5000) {
-                                blockCount += 1
-                                blockVolume += trade.s
-                            }
-                        }
+        t = data.results[data.results_count - 1].t
+        // loop through and crunch the data points as they come in
+        for (let trade of data.results) {
+            // not all trades have a trade condition, if omitted it is considered a valid trade
+            if (trade.c == undefined) { trade.c = [0] }
+            if (trade.s !== 0) {
+                const found = trade.c.some(c => conditionsToIgnore.has(c)) // check for valid trade conditions
+                if (!found) {  // considered a valid trade 
+                    volume += trade.s
+                    count += 1
+                    if (trade.s < 100) {
+                        oddlotVolume += trade.s
+                        oddlotCount += 1
+                    }
+                    if (trade.s >= 5000) {
+                        blockCount += 1
+                        blockVolume += trade.s
                     }
                 }
-                return ({
-                    oddlotVolume,
-                    oddlotCount,
-                    volume,
-                    count,
-                    blockCount,
-                    blockVolume
-                })
             }
-        })
-        .catch((err) => {
-            console.log(err)
-            return err
-        })
-    return resp
+        }
+    }
+    while (data.result_count == limit);
+    // if the result set is equal at the limit there are more records, so check for more.
 
+    // Once the result count is less than limit, we must have gotten them all
+
+    // console.log(`${count} ticks for ${ticker} on ${date}`)
+
+    const tickSummary = {
+        oddlotVolume,
+        oddlotCount,
+        volume,
+        count,
+        blockCount,
+        blockVolume
+    }
+    // console.log(ticker,date,tickSummary)
+    return tickSummary
 }
 
 //getTicks("PTEN", "2021-03-01").then((data) => { console.log(data) })
