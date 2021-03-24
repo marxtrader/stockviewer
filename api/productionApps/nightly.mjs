@@ -132,6 +132,7 @@ async function storeDataFor(date) {
 	const DateIncrement = 1 / Eod.results.length
 	progressBars.addTask(DateTask, { type: "percentage" })
 	for (const eod of Eod.results) {
+		// This is where the optimization needs to happen
 		const tickInfo = await getTicks(eod.T, dateAsString)
 		EODdata.push({ ...eod, ...tickInfo })
 		progressBars.incrementTask(DateTask, { percentage: DateIncrement })
