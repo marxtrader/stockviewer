@@ -5,7 +5,6 @@ import { millisInADay, millisIn90Days, millisIn90MarketDays} from './Common.mjs'
 // import {ITickerDetailsFormatted as TickerResponse} from 'polygon.io/lib/rest/reference/tickerDetails'
 config()
 export const keyQuery = `apiKey=${process.env.API_KEY}`
-
 //https://api.polygon.io/v2/aggs/grouped/locale/us/market/stocks/${date}?apiKey=${key}
 //
 function toQueryString(t){

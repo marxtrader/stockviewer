@@ -14,7 +14,7 @@
         "nightlyDev": "cd api && npm run nightlyDev",
         "background": "cd api && npm run background"
     },
-    "author": "", 
+    "author": "",
     "license": "ISC",
     "dependencies": {
         "@amcharts/amcharts4": "^4.10.13",
@@ -24,7 +24,8 @@
         "concurrently": "^5.3.0",
         "cors": "^2.8.5",
         "express": "^4.16.4",
-        "mongoose": "^5.11.15"
+        "mongoose": "^5.11.15",
+        "multi-progress-bars": "^3.2.3"
     },
     "devDependencies": {
         "dotenv": "^8.0.0",
