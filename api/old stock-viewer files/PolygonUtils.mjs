@@ -1,5 +1,6 @@
 // import StockData from "../src/StockViewer";
-import { config } from 'dotenv'
+import pkg from 'dotenv';
+const { config } = pkg;
 import fetch from 'node-fetch'
 import { millisInADay, millisIn90Days, millisIn90MarketDays} from './Common.mjs'
 // import {ITickerDetailsFormatted as TickerResponse} from 'polygon.io/lib/rest/reference/tickerDetails'

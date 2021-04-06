@@ -8,42 +8,28 @@ import { getTicks } from '../functions/getTicks.mjs'
 import * as Databasing from '../old stock-viewer files/Databasing.mjs'
 import * as PolygonUtils from '../old stock-viewer files/PolygonUtils.mjs'
 import dotenv from 'dotenv'
-import { MultiProgressBars } from 'multi-progress-bars'
+import pkg from 'multi-progress-bars';
+const { MultiProgressBars } = pkg;
 
 import * as util from 'util'
-import { DateTime, Settings } from 'luxon'
+import luxpkg from 'luxon';
+const { DateTime, Settings } = luxpkg;
 
 import('intl')
 // const timezone = import('dayjs/plugin/timezone')
 Settings.defaultZoneName = "America/New_York"
 
-// const log_file = fs.createWriteStream('.' + '/debug.log', { flags: 'w' });
-// const log_stdout = process.stdout;
 
 const progressBars = new MultiProgressBars({ anchor: "bottom", border: true, persist:false});
 export const AddTask = progressBars.addTask.bind(progressBars)
 export const IncrementTask = progressBars.incrementTask.bind(progressBars)
 export const Done = progressBars.done.bind(progressBars)
-// console.log = function (...args) { //
-// 	log_file.write(util.format(...args) + '\n');
-// 	log_stdout.write(util.format(...args) + '\n');
-// };
+
 
 const config = dotenv.config().parsed
 const ESTOffset = -5
 // polygon key
 let key = config.API_KEY
-// console.log(config)
-// Filter function should take in an index into the list and return true or false
-// Also days is the number of days considered in the calculation
-// const Filters = [
-// 	{ name: "ALL PASS", days: 1, filter: ()=>true },
-// 	{ name: "ALL PASS2", days: 1, filter: ()=>true },
-// 	nDaysUp(3),
-// 	nDaysDown(3),
-// 	{ name: "Gap Up", days: 2, filter: gapUp },
-// 	{ name: "Gap Down", days: 2, filter: gapDown },
-// ]
 
 const Filters = [
 	{ name: "ALL PASS", min: 0, max: 0, filter: () => true },
@@ -100,10 +86,6 @@ function gapDown(series, i) {
 	return series[i].h < (series[i - 1].l)
 }
 
-// function toDateString(millis) {
-// 	return new Date(millis).getTimezoneOffset()("EST")
-// }
-
 async function storeDataFor(date) {
 	const dateAsString = dateString(date)
 	let result;
@@ -141,16 +123,7 @@ async function storeDataFor(date) {
 
 	// const EODdata = Eod.results
 	await Databasing.storeEODs(EODdata)
-	// .then((resp) => {
-	// 	if (resp !== null) {
-	// 		console.log("wrote data")
-	// 	} else {
-	// 		console.log("write failed")//, err.config.data)
-	// 	}
-	// })
-	// .catch((err) => {
-	// 	console.log("DB err: ")
-	// })
+
 }
 async function processRange(start, end) {
 	let universe = await Databasing.getDistinct(eods, {}, ['T'])
@@ -165,10 +138,6 @@ async function processRange(start, end) {
 		const dailiesForTicker = await Databasing.getDailies(ticker, start, end)
 
 		if (dailiesForTicker !== null) {
-			// if(otherLengths!=dailiesForTicker.length){
-			// 	console.log(`while before we had ${otherLengths}, ${ticker} has ${dailiesForTicker.length}`)
-			// 	otherLengths=dailiesForTicker.length
-			// } 
 
 			// Removes any filters there's not enough data for
 			const FiltersToCheck = Filters.filter(f => f.days <= dailiesForTicker.length)
