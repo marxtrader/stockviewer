@@ -18,7 +18,7 @@ function replaceInUrl(apiString){
     return (t)=>{
         let s = apiString
         for(let key in t){
-            s=s.replace(`{${key}}`,t[key].toString())
+            s=s.replace(`{${key}}`,t[key]?t[key].toString():"")
         }
         return s
     }

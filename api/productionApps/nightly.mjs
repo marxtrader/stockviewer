@@ -13,6 +13,10 @@ import { MultiProgressBars } from 'multi-progress-bars'
 import * as util from 'util'
 import { DateTime, Settings } from 'luxon'
 
+import * as threads from 'worker_threads'
+import Filters from './filters.js'
+import {WorkerPool,WorkerBee} from './WorkerPool.js'
+
 import('intl')
 // const timezone = import('dayjs/plugin/timezone')
 Settings.defaultZoneName = "America/New_York"
@@ -20,7 +24,7 @@ Settings.defaultZoneName = "America/New_York"
 // const log_file = fs.createWriteStream('.' + '/debug.log', { flags: 'w' });
 // const log_stdout = process.stdout;
 
-const progressBars = new MultiProgressBars({ anchor: "bottom", border: true, persist:false});
+const progressBars = new MultiProgressBars({ anchor: "bottom", border: true, persist: false });
 export const AddTask = progressBars.addTask.bind(progressBars)
 export const IncrementTask = progressBars.incrementTask.bind(progressBars)
 export const Done = progressBars.done.bind(progressBars)
@@ -31,6 +35,7 @@ export const Done = progressBars.done.bind(progressBars)
 
 const config = dotenv.config().parsed
 const ESTOffset = -5
+
 // polygon key
 let key = config.API_KEY
 // console.log(config)
@@ -45,60 +50,8 @@ let key = config.API_KEY
 // 	{ name: "Gap Down", days: 2, filter: gapDown },
 // ]
 
-const Filters = [
-	{ name: "ALL PASS", min: 0, max: 0, filter: () => true },
-	{ name: "ALL PASS2", min: 0, max: 0, filter: () => true },
-	nDaysUp(3),
-	nDaysDown(3),
-	{ name: "Gap Up", min: -1, max: 0, filter: gapUp },
-	{ name: "Gap Down", min: -1, max: 0, filter: gapDown },
-]
-Filters.forEach(calcDays)
-function calcDays(filter) {
-	filter.minIndex = Math.min(filter.min, 0)
-	filter.maxIndex = Math.max(filter.max, 0)
-	filter.days = filter.maxIndex - filter.minIndex + 1
-	return filter.days
-}
-async function setFilter(doc, filter) {
-	await doc.updateOne({ $addToSet: { filtersPassed: filter.name } })
-}
-function nDaysUp(n) {
-	return {
-		name: `${n} Days Up`,
-		// days: n + 1,
-		min: - n, max: 0,
-		filter: (data, i) => {
-			const start = i - n;
-			for (let day = start; day < i; day++) {
-				if (data[day + 1].c <= data[day].o)
-					return false;
-			}
-			return true;
-		}
-	}
-}
-function nDaysDown(n) {
-	return {
-		name: `${n} Days Down`,
-		// days: n + 1,
-		min: - n, max: 0,
-		filter: (data, i) => {
-			const start = i - n;
-			for (let day = start; day < i; day++) {
-				if (data[day + 1].c >= data[day].o)
-					return false;
-			}
-			return true;
-		}
-	}
-}
-function gapUp(series, i) {
-	return series[i].l > series[i - 1].h
-}
-function gapDown(series, i) {
-	return series[i].h < (series[i - 1].l)
-}
+
+const workerPool = new WorkerPool('./productionApps/processTicks.mjs', 128)
 
 // function toDateString(millis) {
 // 	return new Date(millis).getTimezoneOffset()("EST")
@@ -108,8 +61,8 @@ async function storeDataFor(date) {
 	const dateAsString = dateString(date)
 	let result;
 	// get the eod from polygon
-	
-	let Eod = await PolygonUtils.getGroupedDaily({ date:dateAsString })
+
+	let Eod = await PolygonUtils.getGroupedDaily({ date: dateAsString })
 	if (Eod == null) {
 		console.log("ploygon fetch failed")
 		return null
@@ -131,26 +84,38 @@ async function storeDataFor(date) {
 	const DateTask = `Storing ${dateAsString}`
 	const DateIncrement = 1 / Eod.results.length
 	progressBars.addTask(DateTask, { type: "percentage" })
+	const promises = []
+	const start = Date.now()
+	const count = Eod.results.length
+	let numProcessed = 0
 	for (const eod of Eod.results) {
 		// This is where the optimization needs to happen
-		const tickInfo = await getTicks(eod.T, dateAsString)
-		EODdata.push({ ...eod, ...tickInfo })
-		progressBars.incrementTask(DateTask, { percentage: DateIncrement })
+		// const tickWorker = new threads.Worker('./processTicks.js',{env:threads.SHARE_ENV, workerData:{
+		// 	T:eod.T,
+		// 	date:dateAsString
+		// }})
+		promises.push(new Promise((res, rej) =>
+			workerPool.run({ ticker: eod.T, date: dateAsString }, (tickInfo) => {
+				// Essentially: const tickInfo = await getTicks(eod.T, dateAsString)
+				const data = { ...eod, ...tickInfo }
+				EODdata.push(data)
+				// Databasing.storeEODs([data]).then(_ => {
+					numProcessed++
+					const elapsed = Date.now()-start
+					const s = Math.round((elapsed*count/numProcessed-elapsed)/1000)
+					const m = Math.round(s/60) 
+					progressBars.incrementTask(DateTask, { message:`~ ${m} min (${s} s)`,percentage: DateIncrement })
+					res()
+				// })
+			}, (e) => {
+				console.log(e)
+				rej()
+			})))
 	}
-	progressBars.done(DateTask)
-
-	// const EODdata = Eod.results
-	await Databasing.storeEODs(EODdata)
-	// .then((resp) => {
-	// 	if (resp !== null) {
-	// 		console.log("wrote data")
-	// 	} else {
-	// 		console.log("write failed")//, err.config.data)
-	// 	}
-	// })
-	// .catch((err) => {
-	// 	console.log("DB err: ")
-	// })
+	return Promise.all(promises).then(async res=>{
+		progressBars.done(DateTask)
+		await Databasing.storeEODs(EODdata)
+	}).catch(console.log)
 }
 async function processRange(start, end) {
 	let universe = await Databasing.getDistinct(eods, {}, ['T'])
@@ -171,6 +136,7 @@ async function processRange(start, end) {
 			// } 
 
 			// Removes any filters there's not enough data for
+			// console.log(Filters)
 			const FiltersToCheck = Filters.filter(f => f.days <= dailiesForTicker.length)
 
 			//Iterates over every filter
@@ -214,19 +180,30 @@ async function processPast(daysToProcess) {
 		dateObject = dateObject.minus({ day: 1 })
 	}
 	const startOfRange = dateObject.toMillis();
-	const StoringTask = "Storing Days"
 	const increment = 1 / daysToProcess
+	const StoringTask = "Storing Days"
+
 	progressBars.addTask(StoringTask, { type: "percentage" })
+	// const storingData = []
+	const start = Date.now()
 	for (let i = 0; i < daysToProcess; dateObject = dateObject.minus({ day: 1 })) {
 		if (dateObject.weekday < 6) {
 			let date = dateString(dateObject)//convertMillisecondsToDate(Date.now()-86400000)
-			await storeDataFor(dateObject)
-			progressBars.incrementTask(StoringTask, { percentage: increment })
+			const storing = storeDataFor(dateObject)
+			// storingData.push(storing)
+
 			i++
+			const elapsed = Date.now()-start
+			const s = Math.round((elapsed*daysToProcess/i-elapsed)/1000)
+			const m = Math.round(s/60) 
+
+			storing.then(x=>progressBars.incrementTask(StoringTask, {message:`~ ${m} min (${s} s)`, percentage: increment }))	
+			await storing		
+
 		}
 	}
-	progressBars.incrementTask(StoringTask)
-
+	// await Promise.all(storingData)
+	progressBars.done(SortingTask)
 	const endOfRange = dateObject.toMillis();
 
 	await processRange(startOfRange, endOfRange)
