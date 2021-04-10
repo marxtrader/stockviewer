@@ -116,6 +116,8 @@ async function storeDataFor(date) {
 	for (const eod of Eod.results) {
 		// This is where the optimization needs to happen
 		const tickInfo = await getTicks(eod.T, dateAsString)
+		// eod.d = dateString(eod.t)
+		// eod.r = dateString(eod.h-eod.l)
 		EODdata.push({ ...eod, ...tickInfo })
 		progressBars.incrementTask(DateTask, { percentage: DateIncrement })
 	}
@@ -129,8 +131,7 @@ async function processRange(start, end) {
 	let universe = await Databasing.getDistinct(eods, {}, ['T'])
 	const tickers = (universe.T || [])
 	let otherLengths
-	// loop through active symbols pass to child process for processing
-	// console.log("Processing Data:")
+
 	let tickersProcessed = 0
 	for (const ticker of tickers) {
 		// progressBar("Tickers Processed",tickersProcessed++,tickers.length)
@@ -155,9 +156,6 @@ async function processRange(start, end) {
 			for (const daily of dailiesForTicker) {
 				await daily.save()
 			}
-			// //update averages and other data points
-			// result = await computeDatapoints(dailiesForTicker.data, ticker, date)
-			// 	.then(console.log("complete computeDatapoints"))
 
 		} else {
 			console.log("ticker fetch failed")
@@ -182,7 +180,9 @@ async function processPast(daysToProcess) {
 	if (marketIsStillOpen) {
 		dateObject = dateObject.minus({ day: 1 })
 	}
-	const startOfRange = dateObject.toMillis();
+	const startOfRange = 1611896400000 //dateObject.toMillis();
+	console.log("startOfRange :", startOfRange)
+	console.log("daysToProcess :", daysToProcess)
 	const StoringTask = "Storing Days"
 	const increment = 1 / daysToProcess
 	progressBars.addTask(StoringTask, { type: "percentage" })
@@ -201,7 +201,8 @@ async function processPast(daysToProcess) {
 	await processRange(startOfRange, endOfRange)
 }
 
-const numberOfDays = +(process.argv[2] || 10)
+const numberOfDays = +(process.argv[2] || 1)
+console.log("numberOfDays : ", numberOfDays)
 const programStart = new Date()
 processPast(numberOfDays).then(() => {
 	const time = new Date() - programStart

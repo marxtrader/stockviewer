@@ -58,11 +58,11 @@ export async function getTicks(ticker, date, invalidConditions = [15, 16, 38, 17
         blockVolume
     }
     // console.log(count)
-    console.log(ticker,date,tickSummary)
+    //console.log(ticker,date,tickSummary)
     return tickSummary
 }
 
-getTicks("VERY", "2021-01-29").then((data) => { console.log(data) })
+//getTicks("VERY", "2021-01-29").then((data) => { console.log(data) })
 // getTicks("AMC", "2021-01-29").then((data) => { console.log(data) })
 // getTicks("AMC", "2021-01-28").then((data) => { console.log(data) })
 //getTicks("PTEN", "2021-03-01").then((data) => { console.log(data) })
