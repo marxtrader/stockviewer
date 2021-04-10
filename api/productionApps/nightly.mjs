@@ -124,6 +124,10 @@ async function processRange(start, end) {
 	// loop through active symbols pass to child process for processing
 	// console.log("Processing Data:")
 	let tickersProcessed = 0
+	let progress = 0
+	const startTime = Date.now()
+	const FilterTask ="Filters"
+	progressBars.addTask(FilterTask, { type: "percentage" })
 	for (const ticker of tickers) {
 		// progressBar("Tickers Processed",tickersProcessed++,tickers.length)
 		// get past data data points, should already be sorted
@@ -152,6 +156,14 @@ async function processRange(start, end) {
 			for (const daily of dailiesForTicker) {
 				await daily.save()
 			}
+
+			tickersProcessed++
+			progress+=1/tickers.length
+			const elapsed = Date.now()-startTime
+			const s = Math.round((elapsed*tickers.length/tickersProcessed-elapsed)/1000)
+			const m = Math.round(s/60) 
+			progressBars.incrementTask(FilterTask, {message:`~ ${m} min (${s} s)`, percentage: progress })
+
 			// //update averages and other data points
 			// result = await computeDatapoints(dailiesForTicker.data, ticker, date)
 			// 	.then(console.log("complete computeDatapoints"))
@@ -196,14 +208,13 @@ async function processPast(daysToProcess) {
 			const elapsed = Date.now()-start
 			const s = Math.round((elapsed*daysToProcess/i-elapsed)/1000)
 			const m = Math.round(s/60) 
-
 			storing.then(x=>progressBars.incrementTask(StoringTask, {message:`~ ${m} min (${s} s)`, percentage: increment }))	
 			await storing		
 
 		}
 	}
 	// await Promise.all(storingData)
-	progressBars.done(SortingTask)
+	progressBars.done(StoringTask)
 	const endOfRange = dateObject.toMillis();
 
 	await processRange(startOfRange, endOfRange)
