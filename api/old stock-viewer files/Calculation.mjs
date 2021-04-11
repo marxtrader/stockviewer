@@ -49,7 +49,7 @@ async function runIteratorCalculations(inputIterator, calculations,options){
             calculations[calculationName](iteratorResult.value)
         }
     } : () => { }
-    for (iteratorResult = await inputIterator.next(); !(iteratorResult?.done || isNaN(nextResultIndex));iteratorResult = await inputIterator.next(),resultIndex++) {
+    for (iteratorResult = await inputIterator.next(); !(iteratorResult==undefined? false: iteratorResult.done || isNaN(nextResultIndex));iteratorResult = await inputIterator.next(),resultIndex++) {
         // Iterate to the next valid input
         while (resultIndex < nextResultIndex) {
             processOthers()
