@@ -36,10 +36,13 @@ const eod = new Schema({
 	n:{
 		type:Number
 	},
-	// d:{
-	// 	type:String,
-	// 	required:true
-	// },
+	r:{
+		type:Number
+	},
+	d:{
+		type:String,
+		required:true
+	},
 
 	filtersPassed:[String],
 
