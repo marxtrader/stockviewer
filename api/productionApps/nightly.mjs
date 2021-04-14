@@ -1,4 +1,3 @@
-
 import mongoose from 'mongoose'
 import eods from '../models/eods.js'
 import * as Databasing from '../old stock-viewer files/Databasing.mjs'
