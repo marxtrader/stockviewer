@@ -156,16 +156,16 @@ function dateString(date) {
 }
 
 const FullProgressBar = 20
-async function processPast(daysToProcess) {
+async function processPast(daysToProcess, beginDate) {
 	console.log(`Processing the past ${daysToProcess} days`)
 	let now = DateTime.now()
-	let marketIsStillOpen = now.hour < 16
+	//let marketIsStillOpen = now.hour < 16
 
-	let dateObject = DateTime.local(now.year, now.month, now.day)
-	// let dateObject = DateTime.local(beginDate.year, beginDate.month, beginDate.day)
-	if (marketIsStillOpen) {
-		dateObject = dateObject.minus({ day: 1 })
-	}
+	let dateObject = DateTime.local(parseInt(beginDate.year), parseInt(beginDate.month), parseInt(beginDate.day))
+
+	// if (marketIsStillOpen) {
+	// 	dateObject = dateObject.minus({ day: 1 })
+	// }
 	const startOfRange = dateObject.toMillis();
 	const increment = 1 / daysToProcess
 	const StoringTask = "Storing Days"
@@ -196,16 +196,21 @@ async function processPast(daysToProcess) {
 }
 
 const numberOfDays =  1
-let year = process.argv[2]
-let month = process.argv[3]
-let day = process.argv[4]
-const beginDate = {year:year, month:month, day:day}
+let tparam = process.argv[2]
+let param=tparam.split('-')
+let beginDate={
+	year:param[0],
+	month:param[1],
+	day:param[2]
+}
+
 const programStart = new Date()
-processPast(numberOfDays).then(() => {
+processPast(numberOfDays,beginDate).then(() => {
 	const time = new Date() - programStart
 	console.log(`Processed ${numberOfDays} day(s) in ${time}ms`)
 	mongoose.disconnect()
 	console.log("Done Disconnecting")
+	process.exit()
 })
 .catch((err)=>{
 	console.log(err)
