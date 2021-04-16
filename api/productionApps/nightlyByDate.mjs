@@ -195,8 +195,11 @@ async function processPast(daysToProcess) {
 	await processRange(startOfRange, endOfRange)
 }
 
-const numberOfDays = +(process.argv[2] || 1)
-//const beginDate = {year:2021, month:3, day:2}
+const numberOfDays =  1
+let year = process.argv[2]
+let month = process.argv[3]
+let day = process.argv[4]
+const beginDate = {year:year, month:month, day:day}
 const programStart = new Date()
 processPast(numberOfDays).then(() => {
 	const time = new Date() - programStart
@@ -207,6 +210,7 @@ processPast(numberOfDays).then(() => {
 .catch((err)=>{
 	console.log(err)
 })
+console.log("program end")
 
 // {filtersPassed:{$ne:[],$exists:true}}
 // {filtersPassed:{$not:{$ne:[],$exists:true}}}
