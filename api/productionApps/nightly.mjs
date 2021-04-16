@@ -162,6 +162,7 @@ async function processPast(daysToProcess) {
 	let marketIsStillOpen = now.hour < 16
 
 	let dateObject = DateTime.local(now.year, now.month, now.day)
+	// let dateObject = DateTime.local(beginDate.year, beginDate.month, beginDate.day)
 	if (marketIsStillOpen) {
 		dateObject = dateObject.minus({ day: 1 })
 	}
@@ -195,6 +196,7 @@ async function processPast(daysToProcess) {
 }
 
 const numberOfDays = +(process.argv[2] || 1)
+//const beginDate = {year:2021, month:3, day:2}
 const programStart = new Date()
 processPast(numberOfDays).then(() => {
 	const time = new Date() - programStart

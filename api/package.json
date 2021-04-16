@@ -2,7 +2,7 @@
   "scripts": {
     "start": "node server.js",
     "nightly": "node --trace-warnings productionApps/nightly.mjs",
-    "nightlyDev": "nodemon productionApps/nightly.mjs",
+    "nightlyDev": "nodemon productionApps/nightly.mjs 1, 2021-04-14",
     "dev": "nodemon server.js"
   },
   "dependencies": {
@@ -13,6 +13,7 @@
     "intl": "^1.2.5",
     "luxon": "^1.26.0",
     "mongoose": "^5.11.15",
+    "multi-progress-bars": "^3.2.3",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.7",
     "polygon.io": "^2.0.2",

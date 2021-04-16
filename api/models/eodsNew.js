@@ -66,5 +66,5 @@ const eod = new Schema({
 	}
 })
 eod.index({ T: 1, t: 1}, { unique: true });
-mongoose.set('useCreateIndex', true);
+
 module.exports = mongoose.model('eod',eod)
