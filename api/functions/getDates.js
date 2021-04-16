@@ -20,3 +20,7 @@ let getDates = function(days) {
 	}
 	return dates
 }
+
+module.exports = getDates;
+// let res = getDates(10)
+//   console.log(res)
