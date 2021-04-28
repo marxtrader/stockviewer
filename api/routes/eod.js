@@ -26,6 +26,16 @@ router.patch('/', async (req, res) => {
     res.json(req.body)
 })
 
+router.patch('/tickdata', async (req, res) => {
+	const update = { "ticker":req.body.data };
+	const result = await eod.updateOne({ T: req.body.query.T, d:req.body.query.d }, update, {upsert:true});
+  if (result != null) {
+    res.json(result) 
+  } else {
+    res.status(400)
+  }
+})
+
 // Deleting One
 router.delete('/:id', getEod, async (req, res) => {
   try {

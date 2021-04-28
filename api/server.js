@@ -1,3 +1,15 @@
+// db.createUser(
+// 	{
+// 		user: "stockviewer",
+// 		pwd: "stockviewer",
+// 		roles: [ "readWrite", "dbAdmin" ]
+// 	}
+// );
+
+// {"userAdminAnyDatabase"},
+// {"dbAdminAnyDatabase"},
+// {"readWriteAnyDatabase"}
+
 require('dotenv').config()
 
 const express = require('express')

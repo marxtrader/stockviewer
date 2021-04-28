@@ -102,7 +102,9 @@ async function storeDataFor(date) {
 	}
 	return Promise.all(promises).then(async res=>{
 		progressBars.done(DateTask)
-		await Databasing.storeEODs(EODdata)
+		await Databasing.storeEODs(EODdata).catch(e=>{
+			console.log(`Databse error for ${date}`,e)
+		})
 	}).catch(console.log)
 }
 async function processRange(start, end) {
@@ -208,8 +210,9 @@ const programStart = new Date()
 processPast(numberOfDays,beginDate).then(() => {
 	const time = new Date() - programStart
 	console.log(`Processed ${numberOfDays} day(s) in ${time}ms`)
-	mongoose.disconnect()
 	console.log("Done Disconnecting")
+	mongoose.close()
+	mongoose.disconnect()
 	process.exit()
 })
 .catch((err)=>{

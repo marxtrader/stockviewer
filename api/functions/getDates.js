@@ -32,5 +32,3 @@ let getDates = function(days) {
 }
 
 module.exports = getDates;
-let res = getDates(10)
-console.log(res)
