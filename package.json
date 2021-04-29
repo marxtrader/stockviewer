@@ -10,7 +10,7 @@
         "testParse": "node api/productionApps/parseExperiment.mjs",
         "db": "mongod --dbpath api/data/db",
         "devAPI": "cd api && npm run dev",
-        "nightly": "cd api && npm run nightly",
+        "nightly": "cd api && npm run nightlyByDate",
         "nightlyDev": "cd api && npm run nightlyDev",
         "background": "cd api && npm run background"
     },

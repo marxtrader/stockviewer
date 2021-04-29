@@ -85,6 +85,7 @@ export function isInRange(doc, start, end) {
     // console.log(minTimestamp, maxTimestamp, start, end, minTimestamp <= start && start <= maxTimestamp, minTimestamp <= end && end <= maxTimestamp, minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp)
     return { newMin: Math.min(minTimestamp, start), newMax: Math.max(maxTimestamp, end), inRange: (minTimestamp <= start && start <= maxTimestamp && minTimestamp <= end && end <= maxTimestamp) }
 }
+
 export async function storeDailies(symbol, start, end) {
     const tickerInfo = await PolygonUtils.getInfo({ ticker: symbol });
     if (tickerInfo.error != undefined) {
@@ -116,6 +117,7 @@ export async function storeDailies(symbol, start, end) {
     console.log(`Stored new data for ${symbol} from ${start} to ${end}`)
     return doc
 }
+
 export function between(data, start, end, key) {
     const values = []
     data = data || []

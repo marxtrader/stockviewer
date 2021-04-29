@@ -69,6 +69,8 @@ async function storeDataFor(date) {
 	if (Eod.results.length == 0) {
 		console.log("No data")
 		return null
+	} else {
+		console.log("got the eod data")
 	}
 
 	const DateTask = `Storing ${dateAsString}`
