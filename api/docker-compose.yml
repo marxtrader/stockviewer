@@ -13,7 +13,7 @@ services:
     networks:
       - nodeapp-network
     volumes:
-      - ./logs:/var/www/logs
+      - ./logs:/logs
     depends_on: 
       - mongodb
       

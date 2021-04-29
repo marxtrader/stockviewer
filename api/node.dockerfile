@@ -24,7 +24,7 @@ LABEL       author="Chris Ranni"
 ENV         NODE_ENV=production
 ENV         PORT=3000
 
-WORKDIR     /api
+WORKDIR     api
 COPY        package.json package-lock.json ./
 RUN         npm install
 
