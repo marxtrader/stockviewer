@@ -88,11 +88,11 @@ export function isInRange(doc, start, end) {
 export async function storeDailies(symbol, start, end) {
     const tickerInfo = await PolygonUtils.getInfo({ ticker: symbol });
     if (tickerInfo.error != undefined) {
-        // console.log(tickerInfo)
+        console.log(symbol)
         // return
     }
     const doc = await Tickers.findOneAndUpdate({ symbol: tickerInfo.symbol }, tickerInfo, { upsert: true, new: true, useFindAndModify: false })
-    // console.log(tickerInfo, doc)
+    console.log(tickerInfo, doc)
     //If the entire queried range is in range, return
     const rangeInfo = isInRange(doc, start, end)
     if (rangeInfo.inRange) {
