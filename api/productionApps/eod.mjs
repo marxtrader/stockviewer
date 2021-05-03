@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import eods from '../models/eodsNew.js'
+import eods from '../models/eods.js'
 import * as Databasing from '../old stock-viewer files/Databasing.mjs'
 import * as PolygonUtils from '../old stock-viewer files/PolygonUtils.mjs'
 import dotenv from 'dotenv'

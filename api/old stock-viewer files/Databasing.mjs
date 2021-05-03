@@ -12,8 +12,10 @@ const ShouldLog = false
 //     console.log("Mongo says ", e)
 // })
 mongoose.set('useCreateIndex', true);
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
-    ShouldLog?console.log("Mongo says ", e):null
+mongoose.connect("mongodb://localhost/stock-daily", { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
+    ShouldLog?console.log("Mongo says ", e):console.log(
+        "connected"
+    )
 })
 
 // interface StockData {
@@ -138,6 +140,10 @@ export function between(data, start, end, key) {
 // Retrieves the EODs for a specified ticker in a given range
 export async function getDailies(T, start, end) {
     return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: 1 } })
+}
+
+export async function getDailyData(T, date){
+    return await EOD.find({T,d:date})
 }
 
 export function runAggregateCalulations(dailies) {
