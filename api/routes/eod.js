@@ -27,9 +27,9 @@ router.patch('/', async (req, res) => {
 })
 
 // Deleting One
-router.delete('/:id', getEod, async (req, res) => {
+router.post('/delete', async (req, res) => {
   try {
-    await res.eod.remove()
+    await Eod.deleteMany({d:req.query.date})
     res.json({ message: 'Deleted Eod' })
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -39,12 +39,6 @@ router.delete('/:id', getEod, async (req, res) => {
 router.get('/all', async (req, res) =>{
   console.log("req: ", req.query)
 	let ws = await Eod.distinct("T", {"d":req.query.date})
-	res.json(ws)
-})
-
-router.get('/c-lte10v20m', async (req, res) =>{
-  console.log("req: ", req.query)
-	let ws = await Eod.find({"c": {$lte:req.query.price}, "d":req.query.date, "v":{$gte:req.query.volume}})
 	res.json(ws)
 })
 
@@ -60,22 +54,6 @@ router.get('/:T', getEod, (req, res) => {
   //console.log(res)
   res.json(res.eod)
 })
-
-// router.get('/c-lte10v20m', async (req, res) => {
-//   console.log("req : ", req.query)
-//   let data=[]
-//   let query = {"c": {$lte:req.query.price}, "d":req.query.date, "v":{$gte:req.query.volume}}
-//   console.log("query:", query)
-//   try {
-//     data = await Eod.find(query)
-//     if (data == null) {
-//       return res.status(404).json({ message: 'Cannot find eod' })
-//     }
-//   } catch (err) {
-//     return res.status(500).json({ message: err.message })
-//   }
-//   res.json(data)
-// })
 
 async function getEod(req, res, next) {
   let eod

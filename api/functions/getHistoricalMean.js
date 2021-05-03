@@ -84,13 +84,18 @@ async function main(date) {
 	await Eod.find({d:date})
 	.then (async(universe) => {
 		for (let ticker of universe) {
-			console.log("ticker : ", ticker.T)
-			let tickerData = await Eod.find({"T":ticker.T})
+			//console.log("ticker : ", ticker.T)
+			let tickerData = await Eod.find({"T":ticker.T, $and:[{d:{$lt:date}}]})
 			//console.log(tickerData)
-			let update = await averages(tickerData)
-			//console.log(update)
-			let record = await Eod.updateOne({ "T": ticker.T, "d":date }, update, {upsert:true});
-			//console.log("record",record)
+			if (tickerData.length>89) {
+				let update = await averages(tickerData)
+				try {
+					let record = await Eod.updateOne({ "T": ticker.T, "d":date }, update, {upsert:true});
+				} catch {
+					console.log("error symbol", ticker.T)
+				}
+
+			} 
 		}		
 	})
 	.catch((err) =>{
