@@ -93,19 +93,19 @@ const eod = new Schema({
 		blockCount_day05: {
 		type:Number
 	},
-		oddlottCount_day90: {
+		oddlotCount_day90: {
 		type:Number
 	},
-		oddlottCount_day60: {
+		oddlotCount_day60: {
 		type:Number
 	},
-		oddlottCount_day30: {
+		oddlotCount_day30: {
 		type:Number
 	},
-		oddlottCount_day15: {
+		oddlotCount_day15: {
 		type:Number
 	},
-		oddlottCount_day05: {
+		oddlotCount_day05: {
 		type:Number
 	},
 		blockVolume_day90: {
@@ -123,19 +123,19 @@ const eod = new Schema({
 		blockVolume_day05: {
 		type:Number
 	},
-		oddlottVolume_day90: {
+		oddlotVolume_day90: {
 		type:Number
 	},
-		oddlottVolume_day60: {
+		oddlotVolume_day60: {
 		type:Number
 	},
-		oddlottVolume_day30: {
+		oddlotVolume_day30: {
 		type:Number
 	},
-		oddlottVolume_day15: {
+		oddlotVolume_day15: {
 		type:Number
 	},
-		oddlottVolume_day05: {
+		oddlotVolume_day05: {
 		type:Number
 	},
 		range_day90: {
