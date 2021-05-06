@@ -84,6 +84,7 @@ async function storeDataFor(date) {
 				// Essentially: const tickInfo = await getTicks(eod.T, dateAsString)
 				//insert new name:value pairs
 				tickInfo.d = milliToDate(eod.t)
+				if (tickInfo.v !=0) {tickInfo.liquidity = tickInfo.n/tickInfo.v} else {tickInfo.liquidity =0}
 				tickInfo.r = eod.h - eod.l
 				const data = { ...eod, ...tickInfo }
 				EODdata.push(data)
