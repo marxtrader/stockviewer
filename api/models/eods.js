@@ -45,7 +45,7 @@ const eod = new Schema({
 		type:String,
 		required:true
 	},
-	liquidity: {
+	liq: {
 		type:Number
 	},
 	oddlotVolume: {
