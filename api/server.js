@@ -33,23 +33,24 @@ app.use(express.json())
 const eod = require('./routes/eod')
 app.use('/eod', eod)
 
-const experiment = require('./routes/experiment')
-app.use('/experiment', experiment)
+// const experiment = require('./routes/experiment')
+// app.use('/experiment', experiment)
 
-const results = require('./routes/results')
-app.use('/results', results)
+// const results = require('./routes/results')
+// app.use('/results', results)
 
-const tickers = require('./routes/tickers')
-app.use('/tickers', tickers)
+// const tickers = require('./routes/tickers')
+// app.use('/tickers', tickers)
 
-const options = require('./routes/options')
-app.use('/options', options)
+// const options = require('./routes/options')
+// app.use('/options', options)
 
-const frequency = require('./routes/frequency')
-app.use('/frequency', frequency)
+// const frequency = require('./routes/frequency')
+// app.use('/frequency', frequency)
 
-const averages = require('./routes/averages')
-app.use('/averages', averages)
+// const averages = require('./routes/averages')
+// app.use('/averages', averages)
+
 app.use("*",(q,s)=>{
 	console.log(q,s)
 })

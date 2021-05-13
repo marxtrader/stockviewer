@@ -12,8 +12,10 @@ const ShouldLog = false
 //     console.log("Mongo says ", e)
 // })
 mongoose.set('useCreateIndex', true);
-mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
-    ShouldLog?console.log("Mongo says ", e):null
+mongoose.connect("mongodb://localhost/stock-daily", { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
+    ShouldLog?console.log("Mongo says ", e):console.log(
+        "connected"
+    )
 })
 
 // interface StockData {
@@ -88,11 +90,11 @@ export function isInRange(doc, start, end) {
 export async function storeDailies(symbol, start, end) {
     const tickerInfo = await PolygonUtils.getInfo({ ticker: symbol });
     if (tickerInfo.error != undefined) {
-        // console.log(tickerInfo)
+        console.log(symbol)
         // return
     }
     const doc = await Tickers.findOneAndUpdate({ symbol: tickerInfo.symbol }, tickerInfo, { upsert: true, new: true, useFindAndModify: false })
-    // console.log(tickerInfo, doc)
+    console.log(tickerInfo, doc)
     //If the entire queried range is in range, return
     const rangeInfo = isInRange(doc, start, end)
     if (rangeInfo.inRange) {
@@ -138,6 +140,10 @@ export function between(data, start, end, key) {
 // Retrieves the EODs for a specified ticker in a given range
 export async function getDailies(T, start, end) {
     return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: 1 } })
+}
+
+export async function getDailyData(T, date){
+    return await EOD.find({T,d:date})
 }
 
 export function runAggregateCalulations(dailies) {
