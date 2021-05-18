@@ -1,6 +1,47 @@
 
 const key = process.env.API_KEY
 import * as PolygonUtils from '../old stock-viewer files/PolygonUtils.mjs'
+// import mongoose from "mongoose"
+import Frequency from "../models/frequency.js"
+
+function getFrequency(trades){
+    return trades.reduce((frequencies, trade) => {
+        const price = formatPriceString(trade.p);
+        if (frequencies[price] == null) frequencies[price] = 0;
+        frequencies[price]+=(trade.s);
+        return frequencies;
+    }, {});
+} 
+function formatPriceString(price){
+    return parseFloat(price).toFixed(2);
+}
+async function storeFrequencies(ticker, trades) {
+    const frequency = getFrequency(trades)
+    const tickerRecord = await Frequency.findOne({ticker})||await Frequency.create( {ticker, frequencyTable: []});;
+
+    for (const [priceString, volume] of Object.entries(frequency)) {
+        // console.log(priceString, volume);
+        const price = +(priceString)
+
+        const freqTableItem = tickerRecord.frequencyTable.find(
+            (tableItem) => tableItem.price === price,
+        );
+
+        if (!freqTableItem) {
+            tickerRecord.frequencyTable.push({
+                price,
+                volume,
+            });
+        } else {
+            freqTableItem.volume += volume;
+        }
+    }
+    await tickerRecord.save()
+    return 'done';
+}
+
+// start().then((res) => console.log(res));
+
 
 export async function getTicks(ticker, date, invalidConditions = [15, 16, 38, 17], limit = 50000) {
     // Initialization of all the values we want to store
@@ -41,6 +82,7 @@ export async function getTicks(ticker, date, invalidConditions = [15, 16, 38, 17
                 }
             }
         }
+        storeFrequencies(ticker, data.results)
     }
     while (data.results_count == limit);
     // if the result set is equal at the limit there are more records, so check for more.

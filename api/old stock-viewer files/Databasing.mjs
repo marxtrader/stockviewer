@@ -12,11 +12,14 @@ const ShouldLog = false
 //     console.log("Mongo says ", e)
 // })
 mongoose.set('useCreateIndex', true);
-mongoose.connect("mongodb://localhost/stock-daily", { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
-    ShouldLog?console.log("Mongo says ", e):console.log(
-        "connected"
-    )
-})
+// mongoose.connect("mongodb://localhost/stock-daily", { useNewUrlParser: true, useUnifiedTopology: true }, async (e) => {
+//     // if (ShouldLog)
+//     //     console.log("Mongo says ", e)
+//     // else
+//     //     console.log(
+//     //         "connected"
+//     //     )
+// })
 
 // interface StockData {
 //     ticker: string
@@ -47,15 +50,15 @@ export async function storeEODs(eods) {
     return new Promise((resolve, reject) => {
         EODs.insertMany(eods, { ordered: false }, (e, d) => {
             if (e) {
-                if (e.code != 11000){
-                    if(ShouldLog)
-                    console.log("EODError", e)
+                if (e.code != 11000) {
+                    if (ShouldLog)
+                        console.log("EODError", e)
                     reject(e)
                     return e
                 }
-                else{
-                    if(ShouldLog)
-                    console.log("DUPE CAUGHT", e.message)
+                else {
+                    if (ShouldLog)
+                        console.log("DUPE CAUGHT", e.message)
                 }
             }
             resolve()
@@ -142,8 +145,8 @@ export async function getDailies(T, start, end) {
     return await EODs.find({ T, t: { $gte: start, $lte: end } }, null, { sort: { t: 1 } })
 }
 
-export async function getDailyData(T, date){
-    return await EOD.find({T,d:date})
+export async function getDailyData(T, date) {
+    return await EOD.find({ T, d: date })
 }
 
 export function runAggregateCalulations(dailies) {

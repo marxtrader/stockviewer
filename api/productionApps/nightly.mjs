@@ -5,7 +5,7 @@ import * as PolygonUtils from '../old stock-viewer files/PolygonUtils.mjs'
 import dotenv from 'dotenv'
 import  MPB from 'multi-progress-bars'
 import * as threads from 'worker_threads'
-import Filters from './filters.js'
+import {Filters,setFilter} from './filters.js'
 import Workers from './WorkerPool.js'
 import lux from 'luxon';
 import('intl')
@@ -30,7 +30,7 @@ let key = config.API_KEY
 const workerPool = new WorkerPool('./productionApps/processTicks.mjs', 128)
 
 // converts milliseconds to the date format polygon api expects
-let milliToDate=function(date) {
+function milliToDate(date) {
   date= new Date(date)
   let year = date.getFullYear().toString()
   let month = (date.getMonth()+1).toString()

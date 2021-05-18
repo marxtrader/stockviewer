@@ -11,7 +11,7 @@
         "db": "mongod --dbpath api/data/db",
         "devAPI": "cd api && npm run dev",
         "nightly": "cd api && npm run nightly",
-        "nightlyDev": "cd api && npm run nightlyDev",
+        "nightlyTest": "cd api && npm run nightly 2021-05-01 2021-05-04",
         "background": "cd api && npm run background"
     },
     "author": "",
@@ -24,6 +24,7 @@
         "concurrently": "^5.3.0",
         "cors": "^2.8.5",
         "express": "^4.16.4",
+        "find-config": "^1.0.0",
         "mongoose": "^5.11.15",
         "multi-progress-bars": "^3.2.3"
     },
