@@ -88,6 +88,7 @@ class WorkerPool {
         }
     }
     runWorker(worker,data,callback,error){
+        // console.log(data,callback,error)
         worker.callback = callback
         worker.error = error
         worker.postMessage(data)
@@ -117,7 +118,6 @@ class WorkerPool {
             this.tasks.add({data,callback,error})
             return
         }
-
         const workerToUse = this.idleWorkers.pop()
 
         this.runWorker(workerToUse,data,callback,error)
